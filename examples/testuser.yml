@@ -1,0 +1,48 @@
+#Experiment task
+tasks:
+    - name: create test user
+      user:
+        name: "testuser"
+        createhome: yes
+        state: present
+        register: newuser
+    - name: generate random password for user only on creation
+    shell: /usr/bin/openssl rand -base64 32 | passwd --stdin testuser
+    when: newuser.changed
+
+    - name: Configure the Timezone
+  hosts: all
+  tasks:
+
+    - name: Update Timezone to Asia/Kolkata
+      copy: content="Asia/Kolkata\n" dest=/etc/timezone owner=root group=root mode=0644
+      sudo: true
+      register: timezone
+
+    - name: Reconfigure Timezone Data
+      shell: dpkg-reconfigure -f noninteractive tzdata
+      sudo: true
+      when: timezone.changed
+- hosts: blocks
+  tasks:
+  - name: Ansible copy file to remote server
+    copy:
+      src: /testuser/examples/testuser.yml
+      dest: /home/testuser
+- name: Install base packages
+  apt: name={{ item }} state=installed
+  with_items:
+    - locales
+    - build-essential
+    - htop
+    - git
+    - supervisor
+    - python-pip
+    - python3-pip
+  tags:
+    - packages
+
+- name: Upgrade pip
+  pip: name=pip state=latest
+  tags:
+    - packages
