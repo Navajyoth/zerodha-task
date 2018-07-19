@@ -9,4 +9,5 @@ Vagrant.configure("2") do |config|
         vb.memory = "256"
       end
       mgmt_config.vm.provision :shell, path: "mgmt.sh"
+      test.vm.provision "ansible", playbook: "examples/testuser.yml"
   end
